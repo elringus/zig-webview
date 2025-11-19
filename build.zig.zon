@@ -1,0 +1,11 @@
+.{
+    .name = .webview,
+    .version = "0.0.0",
+    .fingerprint = 0xd0d1ff8dab7efb4c,
+    .minimum_zig_version = "0.15.2",
+    .paths = .{
+        "build.zig",
+        "build.zig.zon",
+        "src",
+    },
+}

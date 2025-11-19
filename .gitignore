@@ -1,0 +1,6 @@
+.vs
+.zed
+.idea
+
+.zig-cache
+zig-out
