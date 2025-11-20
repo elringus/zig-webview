@@ -13,16 +13,22 @@ fn buildTarget(b: *std.Build, t: std.Target.Query) void {
     const target = b.resolveTargetQuery(t);
     const optimize = b.standardOptimizeOption(.{});
 
-    const exe = b.addExecutable(.{
-        .name = "webview",
-        .root_module = b.createModule(.{
-            .root_source_file = b.path("src/main.zig"),
-            .target = target,
-            .optimize = optimize,
-        }),
+    const root_module = b.createModule(.{
+        .root_source_file = b.path("src/main.zig"),
+        .target = target,
+        .optimize = optimize,
     });
 
+    root_module.addIncludePath(b.path("src/include"));
+
+    const exe = b.addExecutable(.{
+        .name = "webview",
+        .root_module = root_module,
+    });
+
+    exe.linkLibC();
     exe.linkSystemLibrary("user32");
+    exe.linkSystemLibrary("ole32");
 
     b.installArtifact(exe);
 }

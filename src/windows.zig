@@ -1,4 +1,9 @@
 const utl = @import("utilities.zig");
+const c = @cImport({
+    @cDefine("_WIN32_WINNT", "0x0A00"); // target Windows 10
+    @cInclude("EventToken.h");
+    @cInclude("WebView2.h");
+});
 
 pub fn embedWebview() !void {
     var windows: [100]HWND = undefined;
@@ -6,6 +11,14 @@ pub fn embedWebview() !void {
 
     const idx = utl.read_int(usize) catch 0;
     utl.print("Entered: {}\n", .{idx});
+
+    try initWebviewEnv();
+}
+
+fn initWebviewEnv() !void {
+    const COINIT_APARTMENTTHREADED: u32 = 0x2;
+    const hr = c.CoInitializeEx(null, COINIT_APARTMENTTHREADED);
+    if (hr != 0) return error.CoInitializeFailed;
 }
 
 fn enumVisibleWindows(out: []HWND) !void {
