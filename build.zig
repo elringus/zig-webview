@@ -13,17 +13,20 @@ fn buildTarget(b: *std.Build, t: std.Target.Query) void {
     const target = b.resolveTargetQuery(t);
     const optimize = b.standardOptimizeOption(.{});
 
-    const root_module = b.createModule(.{
+    const root = b.createModule(.{
         .root_source_file = b.path("src/main.zig"),
         .target = target,
         .optimize = optimize,
     });
-
-    root_module.addIncludePath(b.path("src/include"));
+    root.addIncludePath(b.path("src/include"));
+    root.addCSourceFile(.{
+        .file = b.path("src/webview_shim.cpp"),
+        .flags = &[_][]const u8{"-std=c++17"},
+    });
 
     const exe = b.addExecutable(.{
         .name = "webview",
-        .root_module = root_module,
+        .root_module = root,
     });
 
     exe.linkLibC();

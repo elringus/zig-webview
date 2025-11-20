@@ -1,24 +1,13 @@
 const utl = @import("utilities.zig");
-const c = @cImport({
-    @cDefine("_WIN32_WINNT", "0x0A00"); // target Windows 10
-    @cInclude("EventToken.h");
-    @cInclude("WebView2.h");
-});
 
 pub fn embedWebview() !void {
     var windows: [100]HWND = undefined;
     try enumVisibleWindows(&windows);
     const selected_idx = utl.read_int(usize) catch 0;
     const hwnd = windows[selected_idx];
-    _ = hwnd;
 
-    try initWebviewEnv();
-}
-
-fn initWebviewEnv() !void {
-    const COINIT_APARTMENTTHREADED: u32 = 0x2;
-    const hr = c.CoInitializeEx(null, COINIT_APARTMENTTHREADED);
-    if (hr != 0) return error.CoInitializeFailed;
+    if (webview2_init(hwnd) != 0) return error.WebviewInitFailed;
+    webview2_navigate("https://naninovel.com/editor");
 }
 
 fn enumVisibleWindows(out: []HWND) !void {
@@ -63,7 +52,10 @@ extern fn EnumWindows(cb: WNDENUM_CB, lp: WNDENUM_LP) BOOL;
 extern fn GetWindowTextA(hwnd: HWND, lpString: *CHAR, nMaxCount: INT) INT;
 extern fn GetClassNameA(hwnd: HWND, lpString: *CHAR, nMaxCount: INT) INT;
 extern fn IsWindowVisible(hwnd: HWND) BOOL;
-extern fn GetLastError() INT;
+
+extern fn webview2_init(hwnd: HWND) i32;
+extern fn webview2_navigate(url: [*:0]const u8) void;
+extern fn webview2_set_visibility(visible: BOOL) void;
 
 const BOOL = i32;
 const CHAR = u8;
