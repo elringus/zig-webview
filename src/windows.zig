@@ -8,11 +8,11 @@ const c = @cImport({
 pub fn embedWebview() !void {
     var windows: [100]HWND = undefined;
     try enumVisibleWindows(&windows);
-
-    const idx = utl.read_int(usize) catch 0;
-    utl.print("Entered: {}\n", .{idx});
+    const selected_idx = utl.read_int(usize) catch 0;
+    const hwnd = windows[selected_idx];
 
     try initWebviewEnv();
+    try createWebviewForHwnd(hwnd);
 }
 
 fn initWebviewEnv() !void {
@@ -59,11 +59,39 @@ fn getWindowTitle(hwnd: HWND, buf: []u8) ?[]const u8 {
     return if (len == 0) null else buf[0..len];
 }
 
+fn createWebviewForHwnd(_hwnd: ?*u8) !void {
+    _ = _hwnd;
+
+    // Load the WebView2 loader DLL dynamically
+    const dllName = "WebView2Loader.dll";
+    var wide: [256]u16 = undefined;
+    const name_bytes = dllName[0..];
+    if (name_bytes.len + 1 > wide.len) return error.LoadLibraryFailed;
+    var i: usize = 0;
+    while (i < name_bytes.len) : (i += 1) {
+        wide[i] = @as(u16, name_bytes[i]);
+    }
+    wide[name_bytes.len] = 0;
+    const h = LoadLibraryW(&wide[0]);
+    if (h == null) return error.LoadLibraryFailed;
+
+    const proc_name = "CreateCoreWebView2EnvironmentWithOptions";
+    const p = GetProcAddress(h, proc_name);
+    if (p == null) return error.ProcNotFound;
+
+    // TODO: implement full COM completed handlers in Zig.
+    return error.NotImplemented;
+}
+
 extern fn EnumWindows(cb: WNDENUM_CB, lp: WNDENUM_LP) BOOL;
 extern fn GetWindowTextA(hwnd: HWND, lpString: *CHAR, nMaxCount: INT) INT;
 extern fn GetClassNameA(hwnd: HWND, lpString: *CHAR, nMaxCount: INT) INT;
 extern fn IsWindowVisible(hwnd: HWND) BOOL;
 extern fn GetLastError() INT;
+
+extern fn LoadLibraryW(lpLibFileName: [*:0]const u16) ?*u8;
+extern fn GetProcAddress(hModule: ?*u8, lpProcName: [*:0]const u8) ?*u8;
+extern fn GetClientRect(hwnd: ?*u8, lpRect: *c.RECT) c.BOOL;
 
 const BOOL = i32;
 const CHAR = u8;
