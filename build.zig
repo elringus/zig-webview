@@ -29,6 +29,7 @@ fn buildTarget(b: *std.Build, t: std.Target.Query) void {
     exe.linkLibC();
     exe.linkSystemLibrary("user32");
     exe.linkSystemLibrary("ole32");
+    exe.addObjectFile(b.path("src/include/WebView2Loader.dll.lib"));
 
     b.installArtifact(exe);
 }
