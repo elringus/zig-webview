@@ -35,8 +35,7 @@ public:
         g_controller->AddRef();
         if (SUCCEEDED(g_controller->get_CoreWebView2(&g_webview)) && g_webview) {
             g_webview->AddRef();
-            // set initial bounds to client rect of parent window will be handled by Zig caller if desired
-            RECT rc; GetClientRect(GetParent((HWND)0), &rc);
+            // initial bounds can be set by the caller; nothing to do here
         }
         return S_OK;
     }
@@ -72,17 +71,17 @@ public:
 
 extern "C" {
     __declspec(dllexport) int webview2_init(void* hwnd_ptr) {
-        if (!hwnd_ptr) return 0;
+        if (!hwnd_ptr) return (int)E_INVALIDARG;
         HWND hwnd = (HWND)hwnd_ptr;
 
         HRESULT hr = CoInitializeEx(nullptr, COINIT_APARTMENTTHREADED);
-        if (FAILED(hr)) return 0;
+        if (FAILED(hr)) return (int)hr;
 
         // Create environment and then controller via callbacks
         EnvironmentCompletedHandler* envHandler = new EnvironmentCompletedHandler(hwnd);
         hr = CreateCoreWebView2EnvironmentWithOptions(nullptr, nullptr, nullptr, envHandler);
-        // envHandler will be released by COM when appropriate; return success if call initiated
-        return SUCCEEDED(hr) ? 1 : 0;
+        // Return the HRESULT so the caller can check for success (S_OK == 0)
+        return (int)hr;
     }
 
     __declspec(dllexport) void webview2_navigate(const char* url) {
